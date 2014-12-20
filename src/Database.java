@@ -30,7 +30,7 @@ public class Database {
     Statement stmt = null;
     ResultSet rs = null;
     String sql = null;
-    private String URL = "jdbc:mysql://localhost:3306/mysql";
+    private String URL = "localhost:3306";
     private String USER = "root";
     private String PASS = "";
     
@@ -38,7 +38,7 @@ public class Database {
         try {
             Class.forName("com.mysql.jdbc.Driver");
             System.out.println("Connecting to a selected database...");
-            conn = DriverManager.getConnection(URL, USER, PASS);
+            conn = DriverManager.getConnection(URL);
             System.out.println("Connected database successfully...");
         } catch (SQLException ex) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
@@ -48,22 +48,20 @@ public class Database {
         return conn;
     }
     
-    public void insert(String areano, String ipaddress, String status, String description){
+    public void insert(String macaddress, String annotation, String signal, String frompi){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
-//        status = "Grey";
-//        description = "Unknown";
         try{
             System.out.println("Inserting record into the table...");
             stmt = conn.createStatement();
 
-            String sql = "INSERT INTO `mysql`.`neighborinformation`  ( `areano`, `ipaddress`, `status`, `description`) "
+            String sql = "INSERT INTO `disaster`.`askforhelp`  ( `macaddress`, `annotation`, `signal`, `frompi`) "
                          + "VALUES ( "
-                         + "'" + areano         + "', "
-                         + "'" + ipaddress      + "', " 
-                         + "'" + status         + "', "
-                         + "'" + description    + "' "
+                         + "'" + macaddress + "', "
+                         + "'" + annotation + "', " 
+                         + "'" + signal     + "', "
+                         + "'" + frompi		+ "' "
                          + ")";
             stmt.executeUpdate(sql);
             System.out.println("Inserted record into the table...");
@@ -77,7 +75,7 @@ public class Database {
          }
     }//end insert
     
-    public void update(String areano,String ipaddress, String status, String description){
+    public void update(String macaddress, String annotation, String signal, String frompi){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
@@ -85,38 +83,14 @@ public class Database {
             System.out.println("Updating status in the table...");
             stmt = conn.createStatement();
 
-            String sql = "UPDATE `neighborinformation` "
+            String sql = "UPDATE `askforhelp` "
                          + "SET "   
-                         + "`areano` ='" + areano + "', "
-                         + "`status` ='" + status + "', "
-                         + "`description` ='" + description + "' "
-                         + "WHERE `ipaddress` ='" + ipaddress + "'";
+                         + "`annotation` 		='" + annotation 	+ "', "
+                         + "`signal` 			='" + signal		+ "', "
+                         + "`frompi`			='" + frompi		+ "'"
+                         + "WHERE `macaddress` 	='" + macaddress 	+ "'";
             stmt.executeUpdate(sql);
             System.out.println("Updated record in the table...");
-
-         }catch(SQLException se){
-            //Handle errors for JDBC
-            se.printStackTrace();
-         }catch(Exception e){
-            //Handle errors for Class.forName
-            e.printStackTrace();
-         }
-    }//end update
-    
-    public void updateArea(String ipaddress, String areano){
-        Connection conn = connectToDatabase();
-        Statement stmt = null;
-         //STEP 4: Execute a query
-        try{
-            System.out.println("Updating areano in the table...");
-            stmt = conn.createStatement();
-//UPDATE `neighborinformation` SET `areano`='5' WHERE `ipaddress`='2.2.2.2'
-            String sql = "UPDATE `neighborinformation` "
-                         + "SET "   
-                         + "`areano` ='" + areano + "' "
-                         + "WHERE `ipaddress`='" + ipaddress + "'";
-            stmt.executeUpdate(sql);
-            System.out.println("Updated areano in the table...");
 
          }catch(SQLException se){
             //Handle errors for JDBC
@@ -134,7 +108,6 @@ public class Database {
         try{
             System.out.println("Deleting record"+ipaddress+"in the table...");
             stmt = conn.createStatement();
-            //DELETE FROM `mysql`.`neighborinformation` WHERE `neighborinformation`.`ipaddress` = '2.2.2.2'
             String sql = "DELETE FROM `mysql`.`neighborinformation` "                 
                          + "WHERE `neighborinformation`.`ipaddress` ='" + ipaddress + "'";
             stmt.executeUpdate(sql);
@@ -148,18 +121,14 @@ public class Database {
             e.printStackTrace();
          }
     }//end update
-    
-    
-    
-    //if areano = 0 mean select * from table
-    public ResultSet select(String areano){
-        //Connection conn = connectToDatabase();
+   
+    public ResultSet select(String frompi){
         System.out.println("reach select method");
          //STEP 4: Execute a query
         try{
             System.out.println("selecting record in the table...");
             stmt = conn.createStatement();
-            sql = "SELECT * FROM `neighborinformation` WHERE `areano` = '" + areano + "'";
+            sql = "SELECT * FROM `askforhelp` WHERE `frompi` = '" + frompi + "'";
             rs = stmt.executeQuery(sql);
             System.out.println("Select record from the table...");
             return rs;
@@ -174,15 +143,13 @@ public class Database {
         return rs;
     }//end select
     
-    public ResultSet selectAll(String ip){
-        //Connection conn = connectToDatabase();
+    public ResultSet selectAll(){
         System.out.println("reach select method");
          //STEP 4: Execute a query
         try{
             System.out.println("Selecting All record in the table...");
             stmt = conn.createStatement();
-            sql = "SELECT * FROM `neighborinformation` WHERE `ipaddress` = '" + ip + "'";
-            rs = stmt.executeQuery(sql);
+            sql = "SELECT * FROM `neighborinformation`";
             System.out.println("Select record from the table...");
             return rs;
 
