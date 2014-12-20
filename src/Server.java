@@ -146,7 +146,7 @@ public class Server extends JFrame{
 				db = new Database("jdbc:mysql://localhost:3306/disaster", "root", "");
 				
 				//check duplicate MAC address
-				if(db.select(frompi) == null){
+				if(db.checkMac(macaddress) == null){
 					db.insert(macaddress, annotation, signal, frompi);
 				} else {
 					db.update(macaddress, annotation, signal, frompi);

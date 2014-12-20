@@ -161,5 +161,26 @@ public class Database {
             e.printStackTrace();
          }
         return rs;
+    }//end selectAll
+    
+    public ResultSet checkMac(String macaddress){
+        System.out.println("reach select method");
+         //STEP 4: Execute a query
+        try{
+            System.out.println("selecting record in the table...");
+            stmt = conn.createStatement();
+            sql = "SELECT * FROM `askforhelp` WHERE `macaddress` = '" + macaddress + "'";
+            rs = stmt.executeQuery(sql);
+            System.out.println("Select record from the table...");
+            return rs;
+
+         }catch(SQLException se){
+            //Handle errors for JDBC
+            se.printStackTrace();
+         }catch(Exception e){
+            //Handle errors for Class.forName
+            e.printStackTrace();
+         }
+        return rs;
     }//end select
 }
