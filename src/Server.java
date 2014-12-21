@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -25,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -136,18 +138,37 @@ public class Server extends JFrame{
 				DataInputStream input = new DataInputStream(socket.getInputStream());
 				data = (String)input.readUTF();
 				
+				//default value
+				String macaddress = null;
+				String annotation = null;
+				String signal = null;
+				String frompi = null;
+				
 				//change data format to json
 				json = new JSONObject(data); 
-				String macaddress = json.getString("macaddress");
-				String annotation = json.getString("annotation");
-				String signal = json.getString("signal");
-				String frompi = json.getString("fromPi");
+				if(json.getString("macaddress") != null){
+					macaddress = json.getString("macaddress");
+				}
+				if(json.getString("annotation") != null){
+					annotation = json.getString("annotation");
+				}
+				if(json.getString("signal") != null){
+					signal = json.getString("signal");
+				}
+				if(json.getString("fromPi") != null){
+					frompi = json.getString("fromPi");
+				}
+				
 				
 				//insert to database
 				db = new Database("jdbc:mysql://localhost:3306/disaster", "root", "");
 				
+				//check getHotspotInformation
+				if(signal.equals("getHotspotInformation")){
+					responseToClient(socket, frompi);
+				}
 				//check duplicate MAC address
-				if(db.checkMac(macaddress) == null){
+				else if(db.checkMac(macaddress) == null){
 					db.insert(macaddress, annotation, signal, frompi);
 				} else if (annotation == "" || signal == "") {
 					db.updateLocate(macaddress, frompi);
@@ -167,6 +188,118 @@ public class Server extends JFrame{
 		}
 	}
 	
+	private static void responseToClient(Socket socket, String frompi) {
+		// TODO Auto-generated method stub
+		try {
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			JSONObject json = new JSONObject();
+			json = addDataToJson(json, frompi);
+			out.println(json);
+			out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+	}
+
+
+	private static JSONObject addDataToJson(JSONObject json, String frompi) {
+		// TODO Auto-generated method stub
+		int numVictim = 0;
+		int numRedSignal = 0;
+		int numYellowSignal = 0;
+		int numGreenSignal = 0;
+		JSONObject data = null;
+		JSONArray clientArray = new JSONArray();
+		if(db != null){
+			db.connectToDatabase();
+			if(db.select(frompi) != null){
+				rs = db.select(frompi);
+				try {
+					if(rs.next()){
+						data = new JSONObject();
+						String macaddress = rs.getString("macaddress");
+						String time = rs.getString("time");
+						String pi = rs.getString("frompi");
+						String annotation = rs.getString("annotation");
+						String signal = rs.getString("signal");
+						
+						data.put("macaddress", macaddress);
+						data.put("time", time);
+						data.put("fromPi", pi);
+						data.put("annotation", annotation);
+						data.put("signal", signal);
+						
+						clientArray.put(data);
+						//json.put(macaddress, data);
+						
+						numVictim++;
+						if(rs.getString("signal").equals("red")){
+							numRedSignal++;
+						} else if (rs.getString("signal").equals("yellow")) {
+							numYellowSignal++;
+						} else if (rs.getString("signal").equals("green")) {
+							numGreenSignal++;
+						}
+					} //end if(rs.next())
+					while(rs.next()){
+						data = new JSONObject();
+						String macaddress = rs.getString("macaddress");
+						String time = rs.getString("time");
+						String pi = rs.getString("frompi");
+						String annotation = rs.getString("annotation");
+						String signal = rs.getString("signal");
+						
+						data.put("macaddress", macaddress);
+						data.put("time", time);
+						data.put("fromPi", pi);
+						data.put("annotation", annotation);
+						data.put("signal", signal);
+						
+						clientArray.put(data);
+						//json.put(macaddress, data);
+						
+						numVictim++;
+						if(rs.getString("signal").equals("red")){
+							numRedSignal++;
+						} else if (rs.getString("signal").equals("yellow")) {
+							numYellowSignal++;
+						} else if (rs.getString("signal").equals("green")) {
+							numGreenSignal++;
+						}
+					} //end while(rs.next())
+					json.put("victim", clientArray);
+					json.put("numVictim", numVictim);
+					json.put("numRedSignal", numRedSignal);
+					json.put("numYellowSignal", numYellowSignal);
+					json.put("numGreenSignal", numGreenSignal);
+					
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} //end try/catch
+			} else {
+				try {
+					json.put("victim", "");
+					json.put("numVictim", numVictim);
+					json.put("numRedSignal", numRedSignal);
+					json.put("numYellowSignal", numYellowSignal);
+					json.put("numGreenSignal", numGreenSignal);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}  //end if(db.select(input.getText()) != null)
+		} else {
+			return null;
+		} //end if(db != null)
+		
+		return json;
+	}
+
 	//DatagramSocket Receive
 	public static void dsocket() throws Exception {
 		DatagramSocket socket;
