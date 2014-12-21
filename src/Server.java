@@ -149,6 +149,8 @@ public class Server extends JFrame{
 				//check duplicate MAC address
 				if(db.checkMac(macaddress) == null){
 					db.insert(macaddress, annotation, signal, frompi);
+				} else if (annotation == "" || signal == "") {
+					db.updateLocate(macaddress, frompi);
 				} else {
 					db.update(macaddress, annotation, signal, frompi);
 				}

@@ -75,6 +75,30 @@ public class Database {
          }
     }//end insert
     
+    public void updateLocate(String macaddress, String frompi){
+        Connection conn = connectToDatabase();
+        Statement stmt = null;
+         //STEP 4: Execute a query
+        try{
+            System.out.println("Updating status in the table...");
+            stmt = conn.createStatement();
+
+            String sql = "UPDATE `askforhelp` "
+                         + "SET "
+                         + "`frompi`			='" + frompi		+ "'"
+                         + "WHERE `macaddress` 	='" + macaddress 	+ "'";
+            stmt.executeUpdate(sql);
+            System.out.println("Updated record in the table...");
+
+         }catch(SQLException se){
+            //Handle errors for JDBC
+            se.printStackTrace();
+         }catch(Exception e){
+            //Handle errors for Class.forName
+            e.printStackTrace();
+         }
+    }//end update
+    
     public void update(String macaddress, String annotation, String signal, String frompi){
         Connection conn = connectToDatabase();
         Statement stmt = null;
