@@ -119,6 +119,7 @@ public class Server extends JFrame{
             }
         });
 		
+		
 		// Open Socket
 		socket();
 		//dsocket();
