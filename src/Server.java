@@ -39,6 +39,11 @@ public class Server extends JFrame{
 	private static String data;
 	protected JTextField input;
 	protected JTextArea screen;
+	protected JPanel resultPanel;
+	protected JLabel resultLabel;
+	protected JLabel redSignalLabel;
+	protected JLabel yellowSignalLabel;
+	protected JLabel greenSignalLabel;
 	protected int amountOfResult = 0;
 	protected int redSignal = 0;
 	protected int yellowSignal = 0;
@@ -69,14 +74,14 @@ public class Server extends JFrame{
 			searchPanel.add(buttonSearchPanel);
 	
 		//result panel
-		JPanel resultPanel = new JPanel(new GridLayout(1,4));
-			JLabel resultLabel = new JLabel(amountOfResult + " results has found.");
+		resultPanel = new JPanel(new GridLayout(1,4));
+			resultLabel = new JLabel(amountOfResult + " results has found.");
 			resultPanel.add(resultLabel);
-			JLabel redSignalLabel = new JLabel(redSignal + " red signal has found.");
+			redSignalLabel = new JLabel(redSignal + " red signal has found.");
 			resultPanel.add(redSignalLabel);
-			JLabel yellowSignalLabel = new JLabel(yellowSignal + " yellow signal has found.");
+			yellowSignalLabel = new JLabel(yellowSignal + " yellow signal has found.");
 			resultPanel.add(yellowSignalLabel);
-			JLabel greenSignalLabel = new JLabel(greenSignal + " green signal has found.");
+			greenSignalLabel = new JLabel(greenSignal + " green signal has found.");
 			resultPanel.add(greenSignalLabel);
 			
 		//screen panel
@@ -113,7 +118,9 @@ public class Server extends JFrame{
 	
 	//Main Method
 	public static void main(String[] args) throws Exception {
-		
+		//insert to database
+		db = new Database("jdbc:mysql://localhost/disaster?user=root&password=", "root", "");
+
 		// run GUI in new Thread
 		java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -160,22 +167,25 @@ public class Server extends JFrame{
 				}
 				
 				
-				//insert to database
-				db = new Database("jdbc:mysql://localhost:3306/disaster", "root", "");
-				
+				try{
 				//check getHotspotInformation
 				if(signal.equals("getHotspotInformation")){
 					responseToClient(socket, frompi);
-				}
-				//check duplicate MAC address
-				else if(db.checkMac(macaddress) == null){
+					System.out.println(data);
+				}				//check duplicate MAC address
+				else if(!db.checkMac(macaddress).next()){
+					System.out.println("insert new mac");
 					db.insert(macaddress, annotation, signal, frompi);
-				} else if (annotation == "" || signal == "") {
+				} else if (signal.equals("updateLocate")) {
+					System.out.println("update Locate");
 					db.updateLocate(macaddress, frompi);
 				} else {
+					System.out.println("update normal");
 					db.update(macaddress, annotation, signal, frompi);
 				}
-				
+				} catch(Exception e){
+					e.printStackTrace();
+				}
 	            System.out.println(data);
 				input.close();
 				socket.close();
@@ -356,10 +366,12 @@ public class Server extends JFrame{
 			redSignal = 0;
 			yellowSignal = 0;
 			greenSignal = 0;
-			if(Pattern.matches("[1].[1].[1].[1-254]", input.getText())){
+			
 				if(db != null){
+					System.out.println("db != null");
 					db.connectToDatabase();
 					if(db.select(input.getText()) != null){
+						System.out.println("have data");
 						rs = db.select(input.getText());
 						try {
 							if(rs.next()){
@@ -380,7 +392,7 @@ public class Server extends JFrame{
 								}
 							} //end if(rs.next())
 							while(rs.next()){
-								screen.setText(
+								screen.append(
 										rs.getString("macaddress") 	+ "\t" +
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
@@ -396,19 +408,23 @@ public class Server extends JFrame{
 									greenSignal++;
 								}
 							} //end while(rs.next())
+							if(amountOfResult == 0){
+								System.out.println("no data");
+								screen.setText("No result");
+							}
 						} catch (SQLException e1) {
+							System.out.println("catch exception in rs");
 							e1.printStackTrace();
 						} //end try/catch
-					} else {
-						screen.setText("No result");
-						amountOfResult = 0;
-					}  //end if(db.select(input.getText()) != null)
+					} 
 				} else {
+					System.out.println(db == null);
 					screen.setText("Please open mysql");
 				} //end if(db != null)
-			} else {
-				screen.setText("Pi name does not match regexp [1].[1].[1].[1-254]");
-			} //end if(Pattern.matches("[1].[1].[1].[1-254]", input.getText()))
+				resultLabel.setText(amountOfResult + " results has found.");
+				redSignalLabel.setText(redSignal + " red signal has found.");
+				yellowSignalLabel.setText(yellowSignal + " yellow signal has found.");
+				greenSignalLabel.setText(greenSignal + " green signal has found.");
 		} //end method 
 	} //end class search action
 	
@@ -417,6 +433,8 @@ public class Server extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			
+			System.out.println("search all action");
 			amountOfResult = 0;
 			redSignal = 0;
 			yellowSignal = 0;
@@ -444,7 +462,7 @@ public class Server extends JFrame{
 							}
 						} //end if(rs.next())
 						while(rs.next()){
-							screen.setText(
+							screen.append(
 									rs.getString("macaddress") 	+ "\t" +
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
@@ -470,6 +488,10 @@ public class Server extends JFrame{
 			} else {
 				screen.setText("Please open mysql");
 			}//end if(db.connectToDatabase() != null)
+			resultLabel.setText(amountOfResult + " results has found.");
+			redSignalLabel.setText(redSignal + " red signal has found.");
+			yellowSignalLabel.setText(yellowSignal + " yellow signal has found.");
+			greenSignalLabel.setText(greenSignal + " green signal has found.");
 		} //end method actionPerformed
 	} //end class searchAllAction
 }

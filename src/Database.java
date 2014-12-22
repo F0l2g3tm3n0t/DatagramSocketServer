@@ -30,7 +30,7 @@ public class Database {
     Statement stmt = null;
     ResultSet rs = null;
     String sql = null;
-    private String URL = "localhost:3306";
+    private String URL = "jdbc:mysql://localhost/disaster?user=root&password=";
     private String USER = "root";
     private String PASS = "";
     
@@ -152,7 +152,7 @@ public class Database {
         try{
             System.out.println("selecting record in the table...");
             stmt = conn.createStatement();
-            sql = "SELECT * FROM `askforhelp` WHERE `frompi` = '" + frompi + "'";
+            sql = "SELECT * FROM `askforhelp` WHERE `frompi` LIKE '" + frompi + "'";
             rs = stmt.executeQuery(sql);
             System.out.println("Select record from the table...");
             return rs;
@@ -173,8 +173,9 @@ public class Database {
         try{
             System.out.println("Selecting All record in the table...");
             stmt = conn.createStatement();
-            sql = "SELECT * FROM `neighborinformation`";
-            System.out.println("Select record from the table...");
+            sql = "SELECT * FROM `askforhelp`";
+            rs = stmt.executeQuery(sql);
+            System.out.println("Selected record from the table...");
             return rs;
 
          }catch(SQLException se){
