@@ -152,7 +152,7 @@ public class Database {
         try{
             System.out.println("selecting record in the table...");
             stmt = conn.createStatement();
-            sql = "SELECT * FROM `askforhelp` WHERE `frompi` LIKE '" + frompi + "'";
+            sql = "SELECT * FROM `askforhelp` WHERE `frompi` LIKE '%" + frompi + "%'";
             rs = stmt.executeQuery(sql);
             System.out.println("Select record from the table...");
             return rs;

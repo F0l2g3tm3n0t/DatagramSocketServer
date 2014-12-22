@@ -57,7 +57,7 @@ public class Server extends JFrame{
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setTitle("Disaster Recovery Server");
 		//setResizable(false);
-		
+		setSize(800, 600);
 		//search panel
 		JPanel searchPanel = new JPanel(new GridLayout(1,3));
 			JLabel word = new JLabel("Type Pi ip address");
@@ -102,15 +102,17 @@ public class Server extends JFrame{
 				screen = new JTextArea();
 				screen.setEditable(false);
 				screen.setColumns(75);
-				screen.setRows(2);
+				screen.setRows(5);
 				scrollPane.setViewportView(screen);
 			screenPanel.add(scrollPane);
 		
+		JPanel topPanel = new JPanel(new GridLayout(2, 1));
+			topPanel.add(searchPanel);
+			topPanel.add(resultPanel);
 		
 		//main panel
-		JPanel panel = new JPanel(new GridLayout(3, 1));
-		panel.add(searchPanel);
-		panel.add(resultPanel);
+		JPanel panel = new JPanel(new GridLayout(2, 1));
+		panel.add(topPanel);
 		panel.add(screenPanel);
 		add(panel);
 		pack();
@@ -127,20 +129,33 @@ public class Server extends JFrame{
                 new Server().setVisible(true);
             }
         });
-		
-		
 		// Open Socket
 		socket();
+//		new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				socket();
+//			}
+//		}).start();
+		
 		//dsocket();
 	}
 	
 	//Socket Receive
 	public static void socket() {
 		ServerSocket serSocket = null;
+		try {
+			serSocket = new ServerSocket(9998);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		Socket socket = null;	
 		while(true) {
 			try {
-				serSocket = new ServerSocket(9998);
+				
 				socket = serSocket.accept();
 				DataInputStream input = new DataInputStream(socket.getInputStream());
 				data = (String)input.readUTF();
@@ -153,43 +168,55 @@ public class Server extends JFrame{
 				
 				//change data format to json
 				json = new JSONObject(data); 
-				if(json.getString("macaddress") != null){
+				if(json.has("macaddress")){
 					macaddress = json.getString("macaddress");
 				}
-				if(json.getString("annotation") != null){
+				if(json.has("annotation")){
 					annotation = json.getString("annotation");
 				}
-				if(json.getString("signal") != null){
+				if(json.has("signal")){
 					signal = json.getString("signal");
 				}
-				if(json.getString("fromPi") != null){
+				if(json.has("fromPi")){
 					frompi = json.getString("fromPi");
 				}
 				
 				
 				try{
-				//check getHotspotInformation
-				if(signal.equals("getHotspotInformation")){
-					responseToClient(socket, frompi);
-					System.out.println(data);
-				}				//check duplicate MAC address
-				else if(!db.checkMac(macaddress).next()){
-					System.out.println("insert new mac");
-					db.insert(macaddress, annotation, signal, frompi);
-				} else if (signal.equals("updateLocate")) {
-					System.out.println("update Locate");
-					db.updateLocate(macaddress, frompi);
-				} else {
-					System.out.println("update normal");
-					db.update(macaddress, annotation, signal, frompi);
-				}
+					if(signal.equalsIgnoreCase("checkServerConnection")){
+						System.out.println("do nothing");
+					} else if(signal.equalsIgnoreCase("getHotspotInformation")){
+						responseToClient(socket, frompi);
+						System.out.println(data);
+					} else if(signal.equalsIgnoreCase("getWifiListInformation")){
+						JSONArray data = json.getJSONArray("wifiList");
+						String condition = "";
+						int i = 0;
+						if(data.get(i) != null){
+							condition += data.getString(i);
+							i++;
+						}
+						while(data.get(i) != null){
+							condition += "%' OR `frompi` LIKE '%" + data.getString(i);
+						}
+						responseToClient(socket, condition);
+					} else if(!db.checkMac(macaddress).next()){
+						//check duplicate MAC address
+						System.out.println("insert new mac");
+						db.insert(macaddress, annotation, signal, frompi);
+					} else if (signal.equals("updateLocate")) {
+						System.out.println("update Locate");
+						db.updateLocate(macaddress, frompi);
+					} else {
+						System.out.println("update normal");
+						db.update(macaddress, annotation, signal, frompi);
+					}
 				} catch(Exception e){
 					e.printStackTrace();
 				}
 	            System.out.println(data);
 				input.close();
 				socket.close();
-				serSocket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (JSONException e) {
@@ -306,7 +333,7 @@ public class Server extends JFrame{
 		} else {
 			return null;
 		} //end if(db != null)
-		
+		System.out.println("response : " + json.toString());
 		return json;
 	}
 
@@ -379,8 +406,8 @@ public class Server extends JFrame{
 										rs.getString("macaddress") 	+ "\t" +
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
-										rs.getString("annotation") 	+ "\t" +
-										rs.getString("signal") 		+ "\n"
+										rs.getString("signal") 		+ "\t" +
+										rs.getString("annotation") 	+ "\n"
 										);
 								amountOfResult++;
 								if(rs.getString("signal").equals("red")){
@@ -396,8 +423,8 @@ public class Server extends JFrame{
 										rs.getString("macaddress") 	+ "\t" +
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
-										rs.getString("annotation") 	+ "\t" +
-										rs.getString("signal") 		+ "\n"
+										rs.getString("signal") 		+ "\t" +
+										rs.getString("annotation") 	+ "\n"
 										);
 								amountOfResult++;
 								if(rs.getString("signal").equals("red")){
@@ -449,8 +476,8 @@ public class Server extends JFrame{
 									rs.getString("macaddress") 	+ "\t" +
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
-									rs.getString("annotation") 	+ "\t" +
-									rs.getString("signal") 		+ "\n"
+									rs.getString("signal") 		+ "\t" +
+									rs.getString("annotation") 	+ "\n"
 									);
 							amountOfResult++;
 							if(rs.getString("signal").equals("red")){
@@ -466,15 +493,15 @@ public class Server extends JFrame{
 									rs.getString("macaddress") 	+ "\t" +
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
-									rs.getString("annotation") 	+ "\t" +
-									rs.getString("signal") 		+ "\n"
+									rs.getString("signal") 		+ "\t" +
+									rs.getString("annotation") 	+ "\n"
 									);
 							amountOfResult++;
-							if(rs.getString("signal").equals("red")){
+							if(rs.getString("signal").equalsIgnoreCase("red")){
 								redSignal++;
-							} else if (rs.getString("signal").equals("yellow")) {
+							} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
 								yellowSignal++;
-							} else if (rs.getString("signal").equals("green")) {
+							} else if (rs.getString("signal").equalsIgnoreCase("green")) {
 								greenSignal++;
 							}
 						} //end while(rs.next())
