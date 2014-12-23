@@ -159,7 +159,6 @@ public class Server extends JFrame{
 				socket = serSocket.accept();
 				DataInputStream input = new DataInputStream(socket.getInputStream());
 				data = (String)input.readUTF();
-				
 				//default value
 				String macaddress = null;
 				String annotation = null;
@@ -190,16 +189,8 @@ public class Server extends JFrame{
 						System.out.println(data);
 					} else if(signal.equalsIgnoreCase("getWifiListInformation")){
 						JSONArray data = json.getJSONArray("wifiList");
-						String condition = "";
-						int i = 0;
-						if(data.get(i) != null){
-							condition += data.getString(i);
-							i++;
-						}
-						while(data.get(i) != null){
-							condition += "%' OR `frompi` LIKE '%" + data.getString(i);
-						}
-						responseToClient(socket, condition);
+						System.out.println("data = " + data.toString());
+						responseToClientForWifiListInformation(socket, data);
 					} else if(!db.checkMac(macaddress).next()){
 						//check duplicate MAC address
 						System.out.println("insert new mac");
@@ -225,13 +216,91 @@ public class Server extends JFrame{
 		}
 	}
 	
+	private static void responseToClientForWifiListInformation(Socket socket,
+			JSONArray data2) {
+		// TODO Auto-generated method stub
+		try {
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			JSONArray json = new JSONArray();
+			json = addDataToJsonForWifiInformation(json, data2);
+			System.out.println("response" + json.toString());
+			out.write(json.toString());
+			out.flush();
+			out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+
+	private static JSONArray addDataToJsonForWifiInformation(JSONArray json,
+			JSONArray data2) {
+		// TODO Auto-generated method stub
+		JSONObject jsonobject = null;
+		for(int i = 0; i < data2.length(); i++){
+			int numVictim = 0;
+			int numRedSignal = 0;
+			int numYellowSignal = 0;
+			int numGreenSignal = 0;
+			jsonobject = new JSONObject();
+			if(db != null){
+				db.connectToDatabase();
+				try {
+					if(db.select(data2.get(i).toString().substring(1, data2.get(i).toString().length() -1 )) != null){
+						rs = db.select(data2.get(i).toString());
+						if(rs.next()){
+							numVictim++;
+							if(rs.getString("signal").equalsIgnoreCase("red")){
+								numRedSignal++;
+							} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+								numYellowSignal++;
+							} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+								numGreenSignal++;
+							}
+						}
+						while(rs.next()){
+							numVictim++;
+							if(rs.getString("signal").equalsIgnoreCase("red")){
+								numRedSignal++;
+							} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+								numYellowSignal++;
+							} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+								numGreenSignal++;
+							}
+						}
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			try {
+				jsonobject.put("wifi", data2.get(i).toString());
+				jsonobject.put("numVictim", numVictim);
+				jsonobject.put("numRedSignal", numRedSignal);
+				jsonobject.put("numYellowSignal", numYellowSignal);
+				jsonobject.put("numGreenSignal", numGreenSignal);
+				json.put(jsonobject);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return json;
+	}
+
 	private static void responseToClient(Socket socket, String frompi) {
 		// TODO Auto-generated method stub
 		try {
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 			JSONObject json = new JSONObject();
 			json = addDataToJson(json, frompi);
-			out.println(json);
+			System.out.println("response" + json.toString());
+			out.write(json.toString());
+			out.flush();
 			out.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -272,11 +341,11 @@ public class Server extends JFrame{
 						//json.put(macaddress, data);
 						
 						numVictim++;
-						if(rs.getString("signal").equals("red")){
+						if(rs.getString("signal").equalsIgnoreCase("red")){
 							numRedSignal++;
-						} else if (rs.getString("signal").equals("yellow")) {
+						} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
 							numYellowSignal++;
-						} else if (rs.getString("signal").equals("green")) {
+						} else if (rs.getString("signal").equalsIgnoreCase("green")) {
 							numGreenSignal++;
 						}
 					} //end if(rs.next())
@@ -293,46 +362,45 @@ public class Server extends JFrame{
 						data.put("fromPi", pi);
 						data.put("annotation", annotation);
 						data.put("signal", signal);
-						
+					
 						clientArray.put(data);
 						//json.put(macaddress, data);
 						
 						numVictim++;
-						if(rs.getString("signal").equals("red")){
+						if(rs.getString("signal").equalsIgnoreCase("red")){
 							numRedSignal++;
-						} else if (rs.getString("signal").equals("yellow")) {
+						} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
 							numYellowSignal++;
-						} else if (rs.getString("signal").equals("green")) {
+						} else if (rs.getString("signal").equalsIgnoreCase("green")) {
 							numGreenSignal++;
 						}
 					} //end while(rs.next())
 					json.put("victim", clientArray);
-					json.put("numVictim", numVictim);
-					json.put("numRedSignal", numRedSignal);
-					json.put("numYellowSignal", numYellowSignal);
-					json.put("numGreenSignal", numGreenSignal);
-					
+//					json.put("numVictim", numVictim);
+//					json.put("numRedSignal", numRedSignal);
+//					json.put("numYellowSignal", numYellowSignal);
+//					json.put("numGreenSignal", numGreenSignal);
+//					
 				} catch (SQLException e1) {
 					e1.printStackTrace();
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} //end try/catch
-			} else {
-				try {
-					json.put("victim", "");
-					json.put("numVictim", numVictim);
-					json.put("numRedSignal", numRedSignal);
-					json.put("numYellowSignal", numYellowSignal);
-					json.put("numGreenSignal", numGreenSignal);
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 			}  //end if(db.select(input.getText()) != null)
 		} else {
 			return null;
 		} //end if(db != null)
+		try {
+			
+			json.put("numVictim", numVictim);
+			json.put("numRedSignal", numRedSignal);
+			json.put("numYellowSignal", numYellowSignal);
+			json.put("numGreenSignal", numGreenSignal);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println("response : " + json.toString());
 		return json;
 	}
