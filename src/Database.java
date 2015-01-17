@@ -30,7 +30,7 @@ public class Database {
     Statement stmt = null;
     ResultSet rs = null;
     String sql = null;
-    private String URL = "jdbc:mysql://localhost/disaster?user=root&password=";
+    private String URL = "jdbc:mysql://localhost/disaster?useUnicode=true&characterEncoding=UTF-8&user=root&password=";
     private String USER = "root";
     private String PASS = "";
     

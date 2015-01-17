@@ -121,7 +121,7 @@ public class Server extends JFrame{
 	//Main Method
 	public static void main(String[] args) throws Exception {
 		//insert to database
-		db = new Database("jdbc:mysql://localhost/disaster?user=root&password=", "root", "");
+		db = new Database("jdbc:mysql://localhost/disaster?useUnicode=true&characterEncoding=UTF-8&user=root&password=", "root", "");
 
 		// run GUI in new Thread
 		java.awt.EventQueue.invokeLater(new Runnable() {
@@ -129,20 +129,56 @@ public class Server extends JFrame{
                 new Server().setVisible(true);
             }
         });
-		// Open Socket
-		socket();
-//		new Thread(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				// TODO Auto-generated method stub
-//				socket();
-//			}
-//		}).start();
+//		// Open Socket
+//		socket();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				socket();
+			}
+		}).start();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				receiveBroadcast();
+			}
+		}).start();
 		
-		//dsocket();
 	}
 	
+	private static void receiveBroadcast() {
+		// TODO Auto-generated method stub
+		byte[] buffer = new byte[3000];
+        int port = 22220;
+        DatagramSocket dsocket;
+		try {
+			dsocket = new DatagramSocket(port);
+	        dsocket.setBroadcast(true);
+	        DatagramPacket packet;
+	       while (true) 
+	        {
+	    	   packet = new DatagramPacket(buffer, buffer.length);
+	             System.out.println("Receiving...");
+	             dsocket.receive(packet);
+	             System.out.println("received...");
+	             String msg = new String(buffer, 0, packet.getLength());
+	             System.out.println(packet.getAddress().getHostName()
+	                                    + ": " + msg);
+	             packet.setLength(buffer.length);
+	         }
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	//Socket Receive
 	public static void socket() {
 		ServerSocket serSocket = null;
