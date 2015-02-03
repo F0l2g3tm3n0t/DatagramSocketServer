@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -86,7 +87,7 @@ public class Server extends JFrame{
 			
 		//screen panel
 		JPanel screenPanel = new JPanel(new GridLayout(2,1));
-			JPanel textPanel = new JPanel(new GridLayout(1,5));
+			JPanel textPanel = new JPanel(new GridLayout(1,9));
 				JLabel macaddressLabel = new JLabel("macaddress");
 					textPanel.add(macaddressLabel);
 				JLabel timeLabel = new JLabel("time");
@@ -97,6 +98,14 @@ public class Server extends JFrame{
 					textPanel.add(signalLabel);
 				JLabel annotationLabel = new JLabel("annotation");
 					textPanel.add(annotationLabel);
+				JLabel userLabel = new JLabel("user");
+					textPanel.add(userLabel);
+				JLabel phoneLabel = new JLabel("phone");
+					textPanel.add(phoneLabel);
+				JLabel latLabel = new JLabel("latitude");
+					textPanel.add(latLabel);
+				JLabel longLabel = new JLabel("longtitude");
+					textPanel.add(longLabel);
 			screenPanel.add(textPanel);
 			JScrollPane scrollPane = new JScrollPane();
 				screen = new JTextArea();
@@ -139,45 +148,125 @@ public class Server extends JFrame{
 				socket();
 			}
 		}).start();
-		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				receiveBroadcast();
-			}
-		}).start();
+		
+//		new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				receiveBroadcast();
+//			}
+//		}).start();
+//		
+//		new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				receiveTCPUnicastChatroom();
+//			}
+//		}).start();
+//		
+//		new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				multicastsocket();
+//			}
+//		}).start();
 		
 	}
 	
-	private static void receiveBroadcast() {
-		// TODO Auto-generated method stub
-		byte[] buffer = new byte[3000];
-        int port = 22220;
-        DatagramSocket dsocket;
-		try {
-			dsocket = new DatagramSocket(port);
-	        dsocket.setBroadcast(true);
-	        DatagramPacket packet;
-	       while (true) 
-	        {
-	    	   packet = new DatagramPacket(buffer, buffer.length);
-	             System.out.println("Receiving...");
-	             dsocket.receive(packet);
-	             System.out.println("received...");
-	             String msg = new String(buffer, 0, packet.getLength());
-	             System.out.println(packet.getAddress().getHostName()
-	                                    + ": " + msg);
-	             packet.setLength(buffer.length);
-	         }
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+//	protected static void multicastsocket() {
+//		// TODO Auto-generated method stub
+//		MulticastSocket socket;
+//		try {
+//			socket = new MulticastSocket(22220);
+//			System.out.println("ChatRoom - (Multicast) " + "Receiving");
+//			InetAddress group = InetAddress.getByName("224.0.0.1");
+//			socket.joinGroup(group);
+//	
+//			DatagramPacket packet;
+//			while(true) {
+//			    byte[] buf = new byte[256];
+//			    packet = new DatagramPacket(buf, buf.length);
+//			    socket.receive(packet);
+//	
+//			    String received = new String(packet.getData());
+//			    System.out.println("Quote of the Moment: " + received);
+//			}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	protected static void receiveTCPUnicastChatroom() {
+//		// TODO Auto-generated method stub
+//		ServerSocket serverSocket = null;
+//		Socket socket = null;
+//		DataInputStream input = null;
+//		try{
+//
+//			// open socket
+//			serverSocket = new ServerSocket(22220);
+//			socket = new Socket();
+//			System.out.println("ChatRoom - " + "Receiving");
+//			while(true){
+//				// socket connected
+//				socket = serverSocket.accept();
+//				// receive
+//				input = new DataInputStream(socket.getInputStream());
+//				String msg = input.readUTF();
+//				System.out.println("ChatRoom - " + "Received");
+//				System.out.println("ChatRoom - " + msg);
+//
+//			}
+//		}catch (Exception e){
+//			e.printStackTrace();
+//			if(socket != null) try {
+//				socket.close();
+//			} catch (IOException e1) {
+//				e1.printStackTrace();
+//			}
+//		}
+//	}
+//
+//	private static void receiveBroadcast() {
+//		// TODO Auto-generated method stub
+//        int port = 22220;
+////        ServerSocket sSocket;
+////        Socket dsocket;
+//        DatagramSocket dsocket;
+//		try {
+//			//sSocket = new ServerSocket(port);
+//			//dsocket = new Socket();
+//			dsocket = new DatagramSocket(port);
+//	        DatagramPacket packet;
+//	        System.out.println("Receiving... Broadcast");
+//	       while (true) 
+//	        {
+//	    	   byte[] buf = new byte[3000];
+//			   packet = new DatagramPacket(buf, buf.length);
+//			   dsocket.receive(packet);
+//			   String msg = new String(buf, 0, packet.getLength());
+////	    	   dsocket = sSocket.accept();
+////	             DataInputStream input = new DataInputStream(dsocket.getInputStream());
+////					data = (String)input.readUTF();
+//					System.out.println("received...");
+//					//System.out.println(packet);
+//					System.out.println(msg);
+//	             
+//	         }
+//		} catch (SocketException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
 
 	//Socket Receive
 	public static void socket() {
@@ -200,6 +289,10 @@ public class Server extends JFrame{
 				String annotation = null;
 				String signal = null;
 				String frompi = null;
+				String user = null;
+				String phone = null;
+				String lat = null;
+				String lon = null;
 				
 				//change data format to json
 				json = new JSONObject(data); 
@@ -214,6 +307,18 @@ public class Server extends JFrame{
 				}
 				if(json.has("fromPi")){
 					frompi = json.getString("fromPi");
+				}
+				if(json.has("user")){
+					user = json.getString("user");
+				}
+				if(json.has("phone")){
+					phone = json.getString("phone");
+				}
+				if(json.has("lat")){
+					lat = json.getString("lat");
+				}
+				if(json.has("long")){
+					lon = json.getString("long");
 				}
 				
 				
@@ -233,10 +338,10 @@ public class Server extends JFrame{
 						db.insert(macaddress, annotation, signal, frompi);
 					} else if (signal.equals("updateLocate")) {
 						System.out.println("update Locate");
-						db.updateLocate(macaddress, frompi);
+						db.updateLocate(macaddress, frompi, user, phone, lat, lon);
 					} else {
 						System.out.println("update normal");
-						db.update(macaddress, annotation, signal, frompi);
+						db.update(macaddress, annotation, signal, frompi, user, phone, lat, lon);
 					}
 				} catch(Exception e){
 					e.printStackTrace();
@@ -342,7 +447,6 @@ public class Server extends JFrame{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-		
 	}
 
 
@@ -366,12 +470,20 @@ public class Server extends JFrame{
 						String pi = rs.getString("frompi");
 						String annotation = rs.getString("annotation");
 						String signal = rs.getString("signal");
+						String user = rs.getString("user");
+						String phone = rs.getString("phone");
+						String lat = rs.getString("lat");
+						String lon = rs.getString("long");
 						
 						data.put("macaddress", macaddress);
 						data.put("time", time);
 						data.put("fromPi", pi);
 						data.put("annotation", annotation);
 						data.put("signal", signal);
+						data.put("user", user);
+						data.put("phone", phone);
+						data.put("lat", lat);
+						data.put("long", lon);
 						
 						clientArray.put(data);
 						//json.put(macaddress, data);
@@ -392,12 +504,20 @@ public class Server extends JFrame{
 						String pi = rs.getString("frompi");
 						String annotation = rs.getString("annotation");
 						String signal = rs.getString("signal");
+						String user = rs.getString("user");
+						String phone = rs.getString("phone");
+						String lat = rs.getString("lat");
+						String lon = rs.getString("long");
 						
 						data.put("macaddress", macaddress);
 						data.put("time", time);
 						data.put("fromPi", pi);
 						data.put("annotation", annotation);
 						data.put("signal", signal);
+						data.put("user", user);
+						data.put("phone", phone);
+						data.put("lat", lat);
+						data.put("long", lon);
 					
 						clientArray.put(data);
 						//json.put(macaddress, data);
@@ -511,6 +631,10 @@ public class Server extends JFrame{
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
 										rs.getString("signal") 		+ "\t" +
+										rs.getString("user") 		+ "\t" +
+										rs.getString("phone") 		+ "\t" +
+										rs.getString("latitude") 	+ "\t" +
+										rs.getString("longtitude")	+ "\t" +
 										rs.getString("annotation") 	+ "\n"
 										);
 								amountOfResult++;
@@ -528,6 +652,10 @@ public class Server extends JFrame{
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
 										rs.getString("signal") 		+ "\t" +
+										rs.getString("user") 		+ "\t" +
+										rs.getString("phone") 		+ "\t" +
+										rs.getString("latitude") 	+ "\t" +
+										rs.getString("longtitude")	+ "\t" +
 										rs.getString("annotation") 	+ "\n"
 										);
 								amountOfResult++;
@@ -581,6 +709,10 @@ public class Server extends JFrame{
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
 									rs.getString("signal") 		+ "\t" +
+									rs.getString("user") 		+ "\t" +
+									rs.getString("phone") 		+ "\t" +
+									rs.getString("latitude") 	+ "\t" +
+									rs.getString("longtitude")	+ "\t" +
 									rs.getString("annotation") 	+ "\n"
 									);
 							amountOfResult++;
@@ -598,6 +730,10 @@ public class Server extends JFrame{
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
 									rs.getString("signal") 		+ "\t" +
+									rs.getString("user") 		+ "\t" +
+									rs.getString("phone") 		+ "\t" +
+									rs.getString("latitude") 	+ "\t" +
+									rs.getString("longtitude")	+ "\t" +
 									rs.getString("annotation") 	+ "\n"
 									);
 							amountOfResult++;

@@ -75,7 +75,7 @@ public class Database {
          }
     }//end insert
     
-    public void updateLocate(String macaddress, String frompi){
+    public void updateLocate(String macaddress, String frompi, String user, String phone, String lat, String lon){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
@@ -85,7 +85,11 @@ public class Database {
 
             String sql = "UPDATE `askforhelp` "
                          + "SET "
-                         + "`frompi`			='" + frompi		+ "'"
+                         + "`frompi`			='" + frompi		+ "', "
+                         + "`user`				='" + user			+ "', "
+                         + "`phone`				='" + phone			+ "', "
+                         + "`lat`				='" + lat			+ "', "
+                         + "`lon`				='" + lon			+ "' "
                          + "WHERE `macaddress` 	='" + macaddress 	+ "'";
             stmt.executeUpdate(sql);
             System.out.println("Updated record in the table...");
@@ -99,7 +103,7 @@ public class Database {
          }
     }//end update
     
-    public void update(String macaddress, String annotation, String signal, String frompi){
+    public void update(String macaddress, String annotation, String signal, String frompi, String user, String phone, String lat, String lon){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
@@ -111,7 +115,11 @@ public class Database {
                          + "SET "   
                          + "`annotation` 		='" + annotation 	+ "', "
                          + "`signal` 			='" + signal		+ "', "
-                         + "`frompi`			='" + frompi		+ "'"
+                         + "`frompi`			='" + frompi		+ "', "
+                         + "`user`				='" + user			+ "', "
+                         + "`phone`				='" + phone			+ "', "
+                         + "`lat`				='" + lat			+ "', "
+                         + "`lon`				='" + lon			+ "' "
                          + "WHERE `macaddress` 	='" + macaddress 	+ "'";
             stmt.executeUpdate(sql);
             System.out.println("Updated record in the table...");
