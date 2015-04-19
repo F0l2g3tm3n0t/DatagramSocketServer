@@ -48,7 +48,7 @@ public class Database {
         return conn;
     }
     
-    public void insert(String macaddress, String annotation, String signal, String frompi){
+    public void insert(String macaddress, String annotation, String signal, String frompi, double lat, double lon){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
@@ -56,12 +56,14 @@ public class Database {
             System.out.println("Inserting record into the table...");
             stmt = conn.createStatement();
 
-            String sql = "INSERT INTO `disaster`.`askforhelp`  ( `macaddress`, `annotation`, `signal`, `frompi`) "
+            String sql = "INSERT INTO `disaster`.`askforhelp`  ( `macaddress`, `annotation`, `signals`, `frompi`, `lat`,`lon`) "
                          + "VALUES ( "
                          + "'" + macaddress + "', "
                          + "'" + annotation + "', " 
                          + "'" + signal     + "', "
-                         + "'" + frompi		+ "' "
+                         + "'" + frompi		+ "', "
+                         + "'" + lat	    + "', "
+                         + "'" + lon	    + "' "
                          + ")";
             stmt.executeUpdate(sql);
             System.out.println("Inserted record into the table...");
@@ -75,7 +77,7 @@ public class Database {
          }
     }//end insert
     
-    public void updateLocate(String macaddress, String frompi, String user, String phone, String lat, String lon){
+    public void updateLocate(String macaddress, String frompi, String user, String phone, double lat, double lon){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
@@ -90,7 +92,8 @@ public class Database {
                          + "`phone`				='" + phone			+ "', "
                          + "`lat`				='" + lat			+ "', "
                          + "`lon`				='" + lon			+ "' "
-                         + "WHERE `macaddress` 	='" + macaddress 	+ "'";
+                         + "WHERE `macaddress` 	='" + macaddress 	+ "' and"
+                         + "`signals` != 'rescued'";
             stmt.executeUpdate(sql);
             System.out.println("Updated record in the table...");
 
@@ -103,7 +106,7 @@ public class Database {
          }
     }//end update
     
-    public void update(String macaddress, String annotation, String signal, String frompi, String user, String phone, String lat, String lon){
+    public void update(String macaddress, String annotation, String signal, String frompi, String user, String phone, double lat, double lon){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
@@ -114,7 +117,7 @@ public class Database {
             String sql = "UPDATE `askforhelp` "
                          + "SET "   
                          + "`annotation` 		='" + annotation 	+ "', "
-                         + "`signal` 			='" + signal		+ "', "
+                         + "`signals` 			='" + signal		+ "', "
                          + "`frompi`			='" + frompi		+ "', "
                          + "`user`				='" + user			+ "', "
                          + "`phone`				='" + phone			+ "', "
@@ -122,6 +125,7 @@ public class Database {
                          + "`lon`				='" + lon			+ "' "
                          + "WHERE `macaddress` 	='" + macaddress 	+ "'";
             stmt.executeUpdate(sql);
+            System.out.println(sql);
             System.out.println("Updated record in the table...");
 
          }catch(SQLException se){
@@ -133,17 +137,17 @@ public class Database {
          }
     }//end update
     
-    public void deleteData(String ipaddress){
+    public void deleteData(String macaddress){
         Connection conn = connectToDatabase();
         Statement stmt = null;
          //STEP 4: Execute a query
         try{
-            System.out.println("Deleting record"+ipaddress+"in the table...");
+            System.out.println("Deleting record"+macaddress+"in the table...");
             stmt = conn.createStatement();
-            String sql = "DELETE FROM `mysql`.`neighborinformation` "                 
-                         + "WHERE `neighborinformation`.`ipaddress` ='" + ipaddress + "'";
+            String sql = "DELETE FROM `disaster`.`askforhelp` "                 
+                         + "WHERE `askforhelp`.`macaddress` ='" + macaddress + "'";
             stmt.executeUpdate(sql);
-            System.out.println("Deleted record"+ipaddress+" in the table...");
+            System.out.println("Deleted record"+macaddress+" in the table...");
 
          }catch(SQLException se){
             //Handle errors for JDBC
@@ -216,4 +220,29 @@ public class Database {
          }
         return rs;
     }//end select
+
+	public void updateSignal(String macaddress, String signals) {
+		// TODO Auto-generated method stub
+		Statement stmt = null;
+        //STEP 4: Execute a query
+       try{
+           System.out.println("Updating status in the table...");
+           stmt = conn.createStatement();
+
+           String sql = "UPDATE `askforhelp` "
+                        + "SET "   
+                        + "`signals` 			='" + signals		+ "' "
+                        + "WHERE `macaddress` 	='" + macaddress 	+ "'";
+           stmt.executeUpdate(sql);
+           System.out.println(sql);
+           System.out.println("Updated record in the table...");
+
+        }catch(SQLException se){
+           //Handle errors for JDBC
+           se.printStackTrace();
+        }catch(Exception e){
+           //Handle errors for Class.forName
+           e.printStackTrace();
+        }
+	}
 }

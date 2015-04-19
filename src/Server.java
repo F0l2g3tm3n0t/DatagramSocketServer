@@ -88,24 +88,24 @@ public class Server extends JFrame{
 		//screen panel
 		JPanel screenPanel = new JPanel(new GridLayout(2,1));
 			JPanel textPanel = new JPanel(new GridLayout(1,9));
-				JLabel macaddressLabel = new JLabel("macaddress");
-					textPanel.add(macaddressLabel);
+//				JLabel macaddressLabel = new JLabel("macaddress");
+//					textPanel.add(macaddressLabel);
 				JLabel timeLabel = new JLabel("time");
 					textPanel.add(timeLabel);
 				JLabel frompiLabel = new JLabel("fromPi");
 					textPanel.add(frompiLabel);
 				JLabel signalLabel = new JLabel("signal");
 					textPanel.add(signalLabel);
-				JLabel annotationLabel = new JLabel("annotation");
-					textPanel.add(annotationLabel);
 				JLabel userLabel = new JLabel("user");
 					textPanel.add(userLabel);
 				JLabel phoneLabel = new JLabel("phone");
 					textPanel.add(phoneLabel);
-				JLabel latLabel = new JLabel("latitude");
-					textPanel.add(latLabel);
-				JLabel longLabel = new JLabel("longtitude");
-					textPanel.add(longLabel);
+//				JLabel latLabel = new JLabel("latitude");
+//					textPanel.add(latLabel);
+//				JLabel longLabel = new JLabel("longtitude");
+//					textPanel.add(longLabel);
+				JLabel annotationLabel = new JLabel("annotation");
+					textPanel.add(annotationLabel);
 			screenPanel.add(textPanel);
 			JScrollPane scrollPane = new JScrollPane();
 				screen = new JTextArea();
@@ -149,14 +149,14 @@ public class Server extends JFrame{
 			}
 		}).start();
 		
-//		new Thread(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				// TODO Auto-generated method stub
-//				receiveBroadcast();
-//			}
-//		}).start();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				receiveBroadcast();
+			}
+		}).start();
 //		
 //		new Thread(new Runnable() {
 //			
@@ -233,40 +233,41 @@ public class Server extends JFrame{
 //		}
 //	}
 //
-//	private static void receiveBroadcast() {
-//		// TODO Auto-generated method stub
-//        int port = 22220;
-////        ServerSocket sSocket;
-////        Socket dsocket;
-//        DatagramSocket dsocket;
-//		try {
-//			//sSocket = new ServerSocket(port);
-//			//dsocket = new Socket();
-//			dsocket = new DatagramSocket(port);
-//	        DatagramPacket packet;
-//	        System.out.println("Receiving... Broadcast");
-//	       while (true) 
-//	        {
-//	    	   byte[] buf = new byte[3000];
-//			   packet = new DatagramPacket(buf, buf.length);
-//			   dsocket.receive(packet);
-//			   String msg = new String(buf, 0, packet.getLength());
-////	    	   dsocket = sSocket.accept();
-////	             DataInputStream input = new DataInputStream(dsocket.getInputStream());
-////					data = (String)input.readUTF();
-//					System.out.println("received...");
-//					//System.out.println(packet);
-//					System.out.println(msg);
-//	             
-//	         }
-//		} catch (SocketException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
+	private static void receiveBroadcast() {
+		// TODO Auto-generated method stub
+        int port = 22220;
+//        ServerSocket sSocket;
+//        Socket dsocket;
+        DatagramSocket dsocket;
+		try {
+			//sSocket = new ServerSocket(port);
+			//dsocket = new Socket();
+			dsocket = new DatagramSocket(port);
+	        DatagramPacket packet;
+	        System.out.println("Receiving... Broadcast");
+	       while (true) 
+	        {
+	    	   byte[] buf = new byte[3000];
+			   packet = new DatagramPacket(buf, buf.length);
+			   dsocket.receive(packet);
+			   String msg = new String(buf, 0, packet.getLength());
+//	    	   dsocket = sSocket.accept();
+//	             DataInputStream input = new DataInputStream(dsocket.getInputStream());
+//					data = (String)input.readUTF();
+					System.out.println("received...");
+					//System.out.println(packet);
+					System.out.println(msg);
+					System.out.println(packet.getLength());
+	             
+	         }
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	//Socket Receive
 	public static void socket() {
@@ -291,8 +292,8 @@ public class Server extends JFrame{
 				String frompi = null;
 				String user = null;
 				String phone = null;
-				String lat = null;
-				String lon = null;
+				double lat = 0;
+				double lon = 0;
 				
 				//change data format to json
 				json = new JSONObject(data); 
@@ -315,17 +316,19 @@ public class Server extends JFrame{
 					phone = json.getString("phone");
 				}
 				if(json.has("lat")){
-					lat = json.getString("lat");
+					lat = json.getDouble("lat");
 				}
 				if(json.has("long")){
-					lon = json.getString("long");
+					lon = json.getDouble("long");
 				}
 				
 				
 				try{
 					if(signal.equalsIgnoreCase("checkServerConnection")){
 						System.out.println("do nothing");
-					} else if(signal.equalsIgnoreCase("getHotspotInformation")){
+					} else if(signal.equalsIgnoreCase("rescued")){
+						rescuedVictim(macaddress);
+					}else if(signal.equalsIgnoreCase("getHotspotInformation")){
 						responseToClient(socket, frompi);
 						System.out.println(data);
 					} else if(signal.equalsIgnoreCase("getWifiListInformation")){
@@ -335,7 +338,7 @@ public class Server extends JFrame{
 					} else if(!db.checkMac(macaddress).next()){
 						//check duplicate MAC address
 						System.out.println("insert new mac");
-						db.insert(macaddress, annotation, signal, frompi);
+						db.insert(macaddress, annotation, signal, frompi, lat, lon);
 					} else if (signal.equals("updateLocate")) {
 						System.out.println("update Locate");
 						db.updateLocate(macaddress, frompi, user, phone, lat, lon);
@@ -357,6 +360,14 @@ public class Server extends JFrame{
 		}
 	}
 	
+	private static void rescuedVictim(String macaddress) {
+		// TODO Auto-generated method stub
+		if(db != null){
+			db.connectToDatabase();
+			db.updateSignal(macaddress, "rescued");
+		}
+	}
+
 	private static void responseToClientForWifiListInformation(Socket socket,
 			JSONArray data2) {
 		// TODO Auto-generated method stub
@@ -391,21 +402,21 @@ public class Server extends JFrame{
 						rs = db.select(data2.get(i).toString());
 						if(rs.next()){
 							numVictim++;
-							if(rs.getString("signal").equalsIgnoreCase("red")){
+							if(rs.getString("signals").equalsIgnoreCase("red")){
 								numRedSignal++;
-							} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+							} else if (rs.getString("signals").equalsIgnoreCase("yellow")) {
 								numYellowSignal++;
-							} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+							} else if (rs.getString("signals").equalsIgnoreCase("green")) {
 								numGreenSignal++;
 							}
 						}
 						while(rs.next()){
 							numVictim++;
-							if(rs.getString("signal").equalsIgnoreCase("red")){
+							if(rs.getString("signals").equalsIgnoreCase("red")){
 								numRedSignal++;
-							} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+							} else if (rs.getString("signals").equalsIgnoreCase("yellow")) {
 								numYellowSignal++;
-							} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+							} else if (rs.getString("signals").equalsIgnoreCase("green")) {
 								numGreenSignal++;
 							}
 						}
@@ -469,17 +480,17 @@ public class Server extends JFrame{
 						String time = rs.getString("time");
 						String pi = rs.getString("frompi");
 						String annotation = rs.getString("annotation");
-						String signal = rs.getString("signal");
+						String signal = rs.getString("signals");
 						String user = rs.getString("user");
 						String phone = rs.getString("phone");
 						String lat = rs.getString("lat");
-						String lon = rs.getString("long");
+						String lon = rs.getString("lon");
 						
 						data.put("macaddress", macaddress);
 						data.put("time", time);
 						data.put("fromPi", pi);
 						data.put("annotation", annotation);
-						data.put("signal", signal);
+						data.put("signals", signal);
 						data.put("user", user);
 						data.put("phone", phone);
 						data.put("lat", lat);
@@ -489,11 +500,11 @@ public class Server extends JFrame{
 						//json.put(macaddress, data);
 						
 						numVictim++;
-						if(rs.getString("signal").equalsIgnoreCase("red")){
+						if(rs.getString("signals").equalsIgnoreCase("red")){
 							numRedSignal++;
-						} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+						} else if (rs.getString("signals").equalsIgnoreCase("yellow")) {
 							numYellowSignal++;
-						} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+						} else if (rs.getString("signals").equalsIgnoreCase("green")) {
 							numGreenSignal++;
 						}
 					} //end if(rs.next())
@@ -503,17 +514,17 @@ public class Server extends JFrame{
 						String time = rs.getString("time");
 						String pi = rs.getString("frompi");
 						String annotation = rs.getString("annotation");
-						String signal = rs.getString("signal");
+						String signal = rs.getString("signals");
 						String user = rs.getString("user");
 						String phone = rs.getString("phone");
 						String lat = rs.getString("lat");
-						String lon = rs.getString("long");
+						String lon = rs.getString("lon");
 						
 						data.put("macaddress", macaddress);
 						data.put("time", time);
 						data.put("fromPi", pi);
 						data.put("annotation", annotation);
-						data.put("signal", signal);
+						data.put("signals", signal);
 						data.put("user", user);
 						data.put("phone", phone);
 						data.put("lat", lat);
@@ -523,11 +534,11 @@ public class Server extends JFrame{
 						//json.put(macaddress, data);
 						
 						numVictim++;
-						if(rs.getString("signal").equalsIgnoreCase("red")){
+						if(rs.getString("signals").equalsIgnoreCase("red")){
 							numRedSignal++;
-						} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+						} else if (rs.getString("signals").equalsIgnoreCase("yellow")) {
 							numYellowSignal++;
-						} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+						} else if (rs.getString("signals").equalsIgnoreCase("green")) {
 							numGreenSignal++;
 						}
 					} //end while(rs.next())
@@ -613,6 +624,7 @@ public class Server extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			screen.setText("");
 			amountOfResult = 0;
 			redSignal = 0;
 			yellowSignal = 0;
@@ -627,43 +639,37 @@ public class Server extends JFrame{
 						try {
 							if(rs.next()){
 								screen.setText(
-										rs.getString("macaddress") 	+ "\t" +
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
-										rs.getString("signal") 		+ "\t" +
+										rs.getString("signals") 	+ "\t" +
 										rs.getString("user") 		+ "\t" +
 										rs.getString("phone") 		+ "\t" +
-										rs.getString("latitude") 	+ "\t" +
-										rs.getString("longtitude")	+ "\t" +
 										rs.getString("annotation") 	+ "\n"
 										);
 								amountOfResult++;
-								if(rs.getString("signal").equals("red")){
+								if(rs.getString("signals").equals("red")){
 									redSignal++;
-								} else if (rs.getString("signal").equals("yellow")) {
+								} else if (rs.getString("signals").equals("yellow")) {
 									yellowSignal++;
-								} else if (rs.getString("signal").equals("green")) {
+								} else if (rs.getString("signals").equals("green")) {
 									greenSignal++;
 								}
 							} //end if(rs.next())
 							while(rs.next()){
 								screen.append(
-										rs.getString("macaddress") 	+ "\t" +
 										rs.getString("time") 		+ "\t" +
 										rs.getString("frompi") 		+ "\t" +
-										rs.getString("signal") 		+ "\t" +
+										rs.getString("signals") 		+ "\t" +
 										rs.getString("user") 		+ "\t" +
 										rs.getString("phone") 		+ "\t" +
-										rs.getString("latitude") 	+ "\t" +
-										rs.getString("longtitude")	+ "\t" +
 										rs.getString("annotation") 	+ "\n"
 										);
 								amountOfResult++;
-								if(rs.getString("signal").equals("red")){
+								if(rs.getString("signals").equals("red")){
 									redSignal++;
-								} else if (rs.getString("signal").equals("yellow")) {
+								} else if (rs.getString("signals").equals("yellow")) {
 									yellowSignal++;
-								} else if (rs.getString("signal").equals("green")) {
+								} else if (rs.getString("signals").equals("green")) {
 									greenSignal++;
 								}
 							} //end while(rs.next())
@@ -692,7 +698,7 @@ public class Server extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
+			screen.setText("");
 			System.out.println("search all action");
 			amountOfResult = 0;
 			redSignal = 0;
@@ -705,43 +711,37 @@ public class Server extends JFrame{
 					try {
 						if(rs.next()){
 							screen.setText(
-									rs.getString("macaddress") 	+ "\t" +
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
-									rs.getString("signal") 		+ "\t" +
+									rs.getString("signals") 		+ "\t" +
 									rs.getString("user") 		+ "\t" +
 									rs.getString("phone") 		+ "\t" +
-									rs.getString("latitude") 	+ "\t" +
-									rs.getString("longtitude")	+ "\t" +
 									rs.getString("annotation") 	+ "\n"
 									);
 							amountOfResult++;
-							if(rs.getString("signal").equals("red")){
+							if(rs.getString("signals").equals("red")){
 								redSignal++;
-							} else if (rs.getString("signal").equals("yellow")) {
+							} else if (rs.getString("signals").equals("yellow")) {
 								yellowSignal++;
-							} else if (rs.getString("signal").equals("green")) {
+							} else if (rs.getString("signals").equals("green")) {
 								greenSignal++;
 							}
 						} //end if(rs.next())
 						while(rs.next()){
 							screen.append(
-									rs.getString("macaddress") 	+ "\t" +
 									rs.getString("time") 		+ "\t" +
 									rs.getString("frompi") 		+ "\t" +
-									rs.getString("signal") 		+ "\t" +
+									rs.getString("signals") 		+ "\t" +
 									rs.getString("user") 		+ "\t" +
 									rs.getString("phone") 		+ "\t" +
-									rs.getString("latitude") 	+ "\t" +
-									rs.getString("longtitude")	+ "\t" +
 									rs.getString("annotation") 	+ "\n"
 									);
 							amountOfResult++;
-							if(rs.getString("signal").equalsIgnoreCase("red")){
+							if(rs.getString("signals").equalsIgnoreCase("red")){
 								redSignal++;
-							} else if (rs.getString("signal").equalsIgnoreCase("yellow")) {
+							} else if (rs.getString("signals").equalsIgnoreCase("yellow")) {
 								yellowSignal++;
-							} else if (rs.getString("signal").equalsIgnoreCase("green")) {
+							} else if (rs.getString("signals").equalsIgnoreCase("green")) {
 								greenSignal++;
 							}
 						} //end while(rs.next())
